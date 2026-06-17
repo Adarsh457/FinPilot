@@ -1,0 +1,19 @@
+# Python (backend)
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Database (local data)
+*.db
+
+# Node (frontend)
+node_modules/
+dist/
+build/
+
+# Environment & secrets
+.env
+
+# OS / editor
+.DS_Store
