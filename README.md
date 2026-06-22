@@ -246,4 +246,4 @@ This project is licensed under the MIT License — see the `LICENSE` file for de
 
 ## Author
 
-**[Your Name]** — [GitHub](https://github.com/YOUR-USERNAME) · [LinkedIn](https://linkedin.com/in/YOUR-PROFILE)
+**[Adarsh Sharma]** — [GitHub](https://github.com/YOUR-USERNAME) · [LinkedIn](https://linkedin.com/in/YOUR-PROFILE)
