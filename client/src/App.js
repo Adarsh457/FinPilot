@@ -1,110 +1,176 @@
-import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { useState, useEffect } from "react";
 
-export default function App() {
-  const [form, setForm] = useState({ username: "", email: "", password: "" });
-  const [showPassword, setShowPassword] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+const API = "http://127.0.0.1:8000";
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setSubmitted(false);
-  };
+function App() {
+  const [transactions, setTransactions] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSubmitted(true);
-  };
+  // form state
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("");
+  const [type, setType] = useState("expense");
+  const [description, setDescription] = useState("");
+
+  async function loadData() {
+    try {
+      const [txRes, sumRes] = await Promise.all([
+        fetch(`${API}/transactions`),
+        fetch(`${API}/summary`),
+      ]);
+      if (!txRes.ok || !sumRes.ok) throw new Error("Request failed");
+      setTransactions(await txRes.json());
+      setSummary(await sumRes.json());
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function handleAdd() {
+    if (!amount || !category) {
+      alert("Please enter an amount and a category.");
+      return;
+    }
+    try {
+      const res = await fetch(`${API}/transactions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: parseFloat(amount),
+          category,
+          type,
+          description,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to add");
+      // clear the form
+      setAmount("");
+      setCategory("");
+      setDescription("");
+      setType("expense");
+      // refresh the screen with the new data
+      loadData();
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  if (loading) return <p style={{ padding: 24 }}>Loading…</p>;
+  if (error)
+    return (
+      <p style={{ padding: 24, color: "crimson" }}>
+        Error: {error}. Is the backend running on port 8000?
+      </p>
+    );
+
+  const inputStyle = { padding: 8, border: "1px solid #ccc", borderRadius: 6 };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-100 p-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-slate-800">Create account</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Fill in your details to get started.
-          </p>
+    <div style={{ maxWidth: 600, margin: "40px auto", fontFamily: "system-ui, sans-serif" }}>
+      <h1>FinPilot</h1>
+
+      {summary && (
+        <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
+          <Card label="Income" value={summary.total_income} color="green" />
+          <Card label="Expense" value={summary.total_expense} color="crimson" />
+          <Card label="Balance" value={summary.balance} color="#333" />
         </div>
+      )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-1.5">
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-slate-700"
-            >
-              Username
-            </label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              value={form.username}
-              onChange={handleChange}
-              placeholder="jane_doe"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-800 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-slate-700"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="jane@example.com"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-800 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-slate-700"
-            >
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                value={form.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 pr-10 text-slate-800 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 transition hover:text-slate-600"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 font-medium text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 active:bg-indigo-800"
-          >
-            Sign up
-          </button>
-        </form>
-
-        {submitted && (
-          <p className="mt-4 text-center text-sm text-green-600">
-            Submitted! Check the console for your values.
-          </p>
-        )}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+          marginBottom: 24,
+          padding: 16,
+          border: "1px solid #eee",
+          borderRadius: 8,
+        }}
+      >
+        <input
+          style={inputStyle}
+          type="number"
+          placeholder="Amount"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
+        <input
+          style={inputStyle}
+          placeholder="Category (e.g. food)"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+        />
+        <select style={inputStyle} value={type} onChange={(e) => setType(e.target.value)}>
+          <option value="expense">Expense</option>
+          <option value="income">Income</option>
+        </select>
+        <input
+          style={inputStyle}
+          placeholder="Description (optional)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        <button
+          onClick={handleAdd}
+          style={{
+            padding: "8px 16px",
+            border: "none",
+            borderRadius: 6,
+            background: "#2563eb",
+            color: "white",
+            cursor: "pointer",
+          }}
+        >
+          Add
+        </button>
       </div>
+
+      <h2>Transactions</h2>
+      {transactions.length === 0 ? (
+        <p>No transactions yet.</p>
+      ) : (
+        <ul style={{ listStyle: "none", padding: 0 }}>
+          {transactions.map((t) => (
+            <li
+              key={t.id}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "10px 0",
+                borderBottom: "1px solid #eee",
+              }}
+            >
+              <span>
+                {t.description || t.category}{" "}
+                <small style={{ color: "#888" }}>({t.category})</small>
+              </span>
+              <span style={{ color: t.type === "income" ? "green" : "crimson" }}>
+                {t.type === "income" ? "+" : "-"}₹{t.amount}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
+
+function Card({ label, value, color }) {
+  return (
+    <div style={{ flex: 1, padding: 16, border: "1px solid #eee", borderRadius: 8 }}>
+      <div style={{ fontSize: 13, color: "#888" }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 600, color }}>₹{value}</div>
+    </div>
+  );
+}
+
+export default App;
