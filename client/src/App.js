@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getTransactions, getSummary } from "./api";
+import { Toaster } from "react-hot-toast";
 import { theme } from "./theme";
 import SummaryCards from "./components/SummaryCard";
 import AddTransaction from "./components/AddTransaction";
@@ -32,6 +33,20 @@ function App() {
 
   return (
     <div style={{ maxWidth: 940, margin: "0 auto", padding: "40px 20px 64px" }}>
+       <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            fontFamily: theme.font.body,
+            fontSize: 14,
+            borderRadius: 10,
+            border: `1px solid ${theme.colors.border}`,
+            color: theme.colors.ink,
+          },
+          success: { iconTheme: { primary: theme.colors.income, secondary: "#fff" } },
+          error: { iconTheme: { primary: theme.colors.expense, secondary: "#fff" } },
+        }}
+      />
       <header style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
         <div style={logoMark}>✦</div>
         <div>
