@@ -1,23 +1,25 @@
 import { useState } from "react";
 import { askAI } from "../api";
+import toast from "react-hot-toast";
 import { theme } from "../theme";
 
 function AskFinPilot() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [asking, setAsking] = useState(false);
-  const [error, setError] = useState(null);
 
   async function handleAsk() {
-    if (!question.trim()) return;
+    if (!question.trim()) {
+      toast.error("Please type a question first.");
+      return;
+    }
     setAsking(true);
     setAnswer("");
-    setError(null);
     try {
       const data = await askAI(question);
       setAnswer(data.answer);
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setAsking(false);
     }
@@ -51,17 +53,11 @@ function AskFinPilot() {
       <div style={{ marginTop: 16 }}>
         {asking && <TypingDots />}
 
-        {error && (
-          <div style={{ ...bubbleStyle, borderLeftColor: theme.colors.expense, background: "#FDF0F0", color: theme.colors.expense }}>
-            {error}
-          </div>
-        )}
-
-        {!asking && !error && answer && (
+        {!asking && answer && (
           <div style={bubbleStyle} key={answer}>{answer}</div>
         )}
 
-        {!asking && !error && !answer && (
+        {!asking && !answer && (
           <p style={{ margin: 0, fontSize: 13, color: theme.colors.muted, lineHeight: 1.6 }}>
             Ask anything about your spending — try “What’s my biggest expense?” or “How can I save ₹5,000 a month?”
           </p>

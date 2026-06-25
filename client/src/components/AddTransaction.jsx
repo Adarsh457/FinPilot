@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createTransaction } from "../api";
+import toast from "react-hot-toast";
 import { theme } from "../theme";
 
 const inputStyle = {
@@ -21,16 +22,17 @@ function AddTransaction({ onAdded }) {
 
   async function handleAdd() {
     if (!amount || !category) {
-      alert("Please enter an amount and a category.");
+      toast.error("Please enter an amount and a category.");
       return;
     }
     setSaving(true);
     try {
       await createTransaction({ amount: parseFloat(amount), category, type, description });
       setAmount(""); setCategory(""); setDescription(""); setType("expense");
+      toast.success("Transaction added");
       onAdded();
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     } finally {
       setSaving(false);
     }
