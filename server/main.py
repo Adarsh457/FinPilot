@@ -12,6 +12,9 @@ from sqlmodel import Session, select
 from database import create_db_and_tables, get_session
 from models import Transaction, TransactionCreate
 
+from models import Transaction, TransactionCreate, User, UserCreate, Token
+from auth import hash_password, verify_password, create_access_token
+
 # Load variables from the .env file (must run before creating the Gemini client)
 load_dotenv()
 
@@ -49,6 +52,26 @@ def home():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.post("/register", response_model=Token)
+def register(user: UserCreate, session: Session = Depends(get_session)):
+    existing = session.exec(select(User).where(User.username == user.username)).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Username already taken")
+    new_user = User(username=user.username, hashed_password=hash_password(user.password))
+    session.add(new_user)
+    session.commit()
+    session.refresh(new_user)
+    return Token(access_token=create_access_token(new_user.username))
+
+
+@app.post("/login", response_model=Token)
+def login(user: UserCreate, session: Session = Depends(get_session)):
+    db_user = session.exec(select(User).where(User.username == user.username)).first()
+    if not db_user or not verify_password(user.password, db_user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    return Token(access_token=create_access_token(db_user.username))
+
 
 
 @app.post("/transactions", response_model=Transaction)
