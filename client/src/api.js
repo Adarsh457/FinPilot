@@ -9,6 +9,14 @@ function authHeaders() {
   };
 }
 
+
+export async function getMe() {
+  const res = await fetch(`${API}/me`, { headers: authHeaders() });
+  if (!res.ok) throw new Error("Failed to load user");
+  return res.json();
+}
+
+
 export async function register(username, password) {
   const res = await fetch(`${API}/register`, {
     method: "POST",
@@ -34,6 +42,25 @@ export async function login(username, password) {
 export async function getTransactions() {
   const res = await fetch(`${API}/transactions`, { headers: authHeaders() });
   if (!res.ok) throw new Error("Failed to load transactions");
+  return res.json();
+}
+
+export async function updateTransaction(id, data) {
+  const res = await fetch(`${API}/transactions/${id}`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to update transaction");
+  return res.json();
+}
+
+export async function deleteTransaction(id) {
+  const res = await fetch(`${API}/transactions/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to delete transaction");
   return res.json();
 }
 

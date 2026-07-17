@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getTransactions, getSummary } from "./api";
+import { getTransactions, getSummary, getMe } from "./api";
 import { Toaster, ToastBar, toast } from "react-hot-toast";
 import { theme } from "./theme";
 import SummaryCards from "./components/SummaryCard";
@@ -16,10 +16,12 @@ function App() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
 
   async function loadData() {
     try {
-      const [tx, sum] = await Promise.all([getTransactions(), getSummary()]);
+      const [me, tx, sum] = await Promise.all([getMe(), getTransactions(), getSummary()]);
+      setUser(me);
       setTransactions(tx);
       setSummary(sum);
     } catch (err) {
@@ -42,6 +44,7 @@ function App() {
   function handleLogout() {
     localStorage.removeItem(TOKEN_KEY);
     setToken(null);
+    setUser(null);
     setTransactions([]);
     setSummary(null);
     toast.success("Logged out");
@@ -75,6 +78,14 @@ function App() {
             Track your money. Ask the AI. Stay on course.
           </p>
         </div>
+        {user && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={avatarCircle}>{user.username.charAt(0).toUpperCase()}</div>
+            <span style={{ fontSize: 14, fontWeight: 600, color: theme.colors.ink }}>
+              Hello! {user.username}
+            </span>
+          </div>
+        )}
         <button onClick={handleLogout} style={logoutButton}>Log out</button>
       </header>
 
@@ -85,7 +96,7 @@ function App() {
         <AskFinPilot />
       </div>
 
-      <TransactionList transactions={transactions} />
+      <TransactionList transactions={transactions} onChanged={loadData} />
     </div>
   );
 }
@@ -130,6 +141,13 @@ const logoMark = {
 const logoutButton = {
   padding: "8px 14px", border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.sm,
   background: "#fff", color: theme.colors.ink, fontSize: 13, fontWeight: 600, cursor: "pointer",
+};
+
+const avatarCircle = {
+  width: 34, height: 34, borderRadius: "50%",
+  background: `linear-gradient(135deg, ${theme.colors.brand}, #7C6DF2)`,
+  color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+  fontSize: 15, fontWeight: 700, fontFamily: theme.font.display,
 };
 
 export default App;

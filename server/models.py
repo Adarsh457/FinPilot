@@ -32,7 +32,7 @@ class TransactionBase(SQLModel):
 class Transaction(TransactionBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     date: datetime = Field(default_factory=datetime.now)
-
+    user_id: int = Field(foreign_key="user.id")  
 
 class TransactionCreate(TransactionBase):
     pass
