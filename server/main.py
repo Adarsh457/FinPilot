@@ -154,6 +154,69 @@ def get_summary(
         "expense_by_category": by_category,
     }
 
+@app.get("/insight")
+def get_insight(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    transactions = session.exec(
+        select(Transaction).where(Transaction.user_id == current_user.id)
+    ).all()
+    if not transactions:
+        return {"insight": "Add a few transactions and I'll start spotting patterns for you."}
+
+    total_income = 0.0
+    total_expense = 0.0
+    by_category = {}
+    for t in transactions:
+        if t.type == "income":
+            total_income += t.amount
+        else:
+            total_expense += t.amount
+            by_category[t.category] = by_category.get(t.category, 0.0) + t.amount
+
+    balance = total_income - total_expense
+
+    # --- the percentages (pure math, always accurate) ---
+    if total_income > 0:
+        expense_pct = round((total_expense / total_income) * 100, 1)
+        savings_pct = round((balance / total_income) * 100, 1)
+    else:
+        expense_pct = 0.0
+        savings_pct = 0.0
+
+    # biggest spending category
+    top_category = max(by_category, key=by_category.get) if by_category else None
+
+    # --- short AI comment on top of the numbers ---
+    facts = (
+        f"Income: {total_income}, Expenses: {total_expense}, "
+        f"You spent {expense_pct}% of income and saved {savings_pct}%. "
+        f"Biggest spending category: {top_category or 'none'}."
+    )
+    system_prompt = (
+        "You are FinPilot, a friendly finance assistant. Given the user's numbers, "
+        "write ONE short encouraging sentence about their saving rate and biggest expense. "
+        "Do NOT repeat the exact percentages (they're shown separately). Amounts are in INR. "
+        "Keep it to one sentence, warm and practical."
+    )
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite",
+            contents=f"{facts}\n\nGive me one short encouraging tip.",
+            config=types.GenerateContentConfig(system_instruction=system_prompt),
+        )
+        comment = response.text
+    except Exception:
+        comment = "Keep tracking — small changes add up."
+
+    return {
+        "expense_pct": expense_pct,
+        "savings_pct": savings_pct,
+        "top_category": top_category,
+        "comment": comment,
+    }
+
 
 @app.post("/ask")
 def ask_ai(

@@ -3,6 +3,9 @@ import { createTransaction } from "../api";
 import toast from "react-hot-toast";
 import { theme } from "../theme";
 
+// common categories for the dropdown
+const CATEGORIES = ["food", "rent", "bills", "transport", "shopping", "entertainment", "health", "salary", "other"];
+
 const inputStyle = {
   width: "100%", padding: "10px 12px", border: `1px solid ${theme.colors.border}`,
   borderRadius: theme.radius.sm, fontSize: 14, fontFamily: theme.font.body,
@@ -17,18 +20,23 @@ function AddTransaction({ onAdded }) {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [type, setType] = useState("expense");
+   const [customCategory, setCustomCategory] = useState("");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
+  
+
+  // if "other" is picked, use what they typed; otherwise use the dropdown value
+  const finalCategory = category === "other" ? customCategory.trim() : category;
 
   async function handleAdd() {
-    if (!amount || !category) {
+    if (!amount || !finalCategory) {
       toast.error("Please enter an amount and a category.");
       return;
     }
     setSaving(true);
     try {
       await createTransaction({ amount: parseFloat(amount), category, type, description });
-      setAmount(""); setCategory(""); setDescription(""); setType("expense");
+      setAmount(""); setCategory("food"); setCustomCategory(""); setDescription(""); setType("expense");
       toast.success("Transaction added");
       onAdded();
     } catch (err) {
@@ -56,11 +64,25 @@ function AddTransaction({ onAdded }) {
             </select>
           </div>
         </div>
-        <div>
+         <div>
           <label style={labelStyle}>Category</label>
-          <input style={inputStyle} placeholder="e.g. food, rent, salary"
-            value={category} onChange={(e) => setCategory(e.target.value)} />
+          <select style={inputStyle} value={category} onChange={(e) => setCategory(e.target.value)}>
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c.charAt(0).toUpperCase() + c.slice(1)}
+              </option>
+            ))}
+          </select>
         </div>
+
+        {/* show a text box only when "Other" is selected */}
+        {category === "other" && (
+          <div>
+            <label style={labelStyle}>Custom category</label>
+            <input style={inputStyle} placeholder="Type your category"
+              value={customCategory} onChange={(e) => setCustomCategory(e.target.value)} />
+          </div>
+        )}
         <div>
           <label style={labelStyle}>Description (optional)</label>
           <input style={inputStyle} placeholder="e.g. Monthly groceries"

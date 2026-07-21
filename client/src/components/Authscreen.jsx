@@ -7,24 +7,45 @@ function AuthScreen({ onAuth }) {
   const [mode, setMode] = useState("login"); // "login" | "register"
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const isLogin = mode === "login";
 
-  async function handleSubmit() {
-    if (!username.trim() || !password.trim()) {
-      toast.error("Please enter a username and password.");
-      return;
+  function validate() {
+    const name = username.trim();
+    if (name.length < 3) {
+      toast.error("Username must be at least 3 characters.");
+      return false;
     }
+    // must contain at least one letter (blocks all-number names like "11111111")
+    if (!/[a-zA-Z]/.test(name)) {
+      toast.error("Username must contain at least one letter.");
+      return false;
+    }
+    // only letters, numbers, and underscores allowed
+    if (!/^[a-zA-Z0-9_]+$/.test(name)) {
+      toast.error("Username can only use letters, numbers, and underscores.");
+      return false;
+    }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return false;
+    }
+    return true;
+  }
+
+  async function handleSubmit() {
+    if (!validate()) return;
+
     setBusy(true);
     try {
       if (isLogin) {
-        const data = await login(username, password);
+        const data = await login(username.trim(), password);
         toast.success("Welcome back!");
         onAuth(data.access_token);
       } else {
-        // Register only — then send them to the login screen
-        await register(username, password);
+        await register(username.trim(), password);
         toast.success("Account created! Please log in.");
         setMode("login");
         setPassword("");
@@ -57,12 +78,29 @@ function AuthScreen({ onAuth }) {
             <input style={inputStyle} placeholder="e.g. adarsh"
               value={username} onChange={(e) => setUsername(e.target.value)} />
           </div>
+
           <div>
             <label style={labelStyle}>Password</label>
-            <input style={inputStyle} type="password" placeholder="••••••••"
-              value={password} onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSubmit()} />
+            <div style={{ position: "relative" }}>
+              <input
+                style={{ ...inputStyle, paddingRight: 44 }}
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                style={eyeButton}
+              >
+                {showPassword ? "🙈" : "👁"}
+              </button>
+            </div>
           </div>
+
           <button onClick={handleSubmit} disabled={busy} style={{ ...primaryButton, opacity: busy ? 0.7 : 1 }}>
             {busy ? "Please wait…" : isLogin ? "Log in" : "Create account"}
           </button>
@@ -70,7 +108,7 @@ function AuthScreen({ onAuth }) {
 
         <p style={{ marginTop: 16, marginBottom: 0, fontSize: 13, color: theme.colors.muted, textAlign: "center" }}>
           {isLogin ? "New here? " : "Already have an account? "}
-          <button onClick={() => setMode(isLogin ? "register" : "login")} style={linkButton}>
+          <button onClick={() => { setMode(isLogin ? "register" : "login"); setPassword(""); }} style={linkButton}>
             {isLogin ? "Create an account" : "Log in"}
           </button>
         </p>
@@ -93,6 +131,10 @@ const labelStyle = { display: "block", fontSize: 12, fontWeight: 600, color: the
 const inputStyle = {
   width: "100%", padding: "10px 12px", border: `1px solid ${theme.colors.border}`,
   borderRadius: theme.radius.sm, fontSize: 14, fontFamily: theme.font.body, color: theme.colors.ink, background: "#fff",
+};
+const eyeButton = {
+  position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)",
+  border: "none", background: "transparent", cursor: "pointer", fontSize: 16, padding: "4px 8px", lineHeight: 1,
 };
 const primaryButton = {
   padding: "11px 16px", border: "none", borderRadius: theme.radius.sm, background: theme.colors.brand,

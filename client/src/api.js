@@ -9,6 +9,18 @@ function authHeaders() {
   };
 }
 
+function handleUnauthorized() {
+  localStorage.removeItem("finpilot_token");
+  window.location.reload();
+}
+
+export async function getInsight() {
+  const res = await fetch(`${API}/insight`, { headers: authHeaders() });
+  if (res.status === 401) return handleUnauthorized();
+  if (!res.ok) throw new Error("Failed to get insight");
+  return res.json();
+}
+
 
 export async function getMe() {
   const res = await fetch(`${API}/me`, { headers: authHeaders() });
@@ -90,3 +102,4 @@ export async function askAI(question) {
   if (!res.ok) throw new Error(data.detail || "Something went wrong");
   return data;
 }
+

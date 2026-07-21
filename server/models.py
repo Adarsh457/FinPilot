@@ -49,6 +49,25 @@ class UserCreate(SQLModel):
     username: str
     password: str
 
+    @field_validator("username")
+    @classmethod
+    def username_valid(cls, value):
+        cleaned = value.strip()
+        if len(cleaned) < 3:
+            raise ValueError("Username must be at least 3 characters")
+        if not any(c.isalpha() for c in cleaned):
+            raise ValueError("Username must contain at least one letter")
+        if not cleaned.replace("_", "").isalnum():
+            raise ValueError("Username can only use letters, numbers, and underscores")
+        return cleaned
+
+    @field_validator("password")
+    @classmethod
+    def password_valid(cls, value):
+        if len(value) < 6:
+            raise ValueError("Password must be at least 6 characters")
+        return value
+
 
 class Token(SQLModel):
     access_token: str
