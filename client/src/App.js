@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getTransactions, getSummary, getMe } from "./api";
+import { getTransactions, getSummary, getMe, getInsight } from "./api";
 import { Toaster, ToastBar, toast } from "react-hot-toast";
 import { theme } from "./theme";
 import SummaryCards from "./components/SummaryCard";
@@ -17,6 +17,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
+  const [insight, setInsight] = useState(null);
 
   async function loadData() {
     try {
@@ -24,6 +25,7 @@ function App() {
       setUser(me);
       setTransactions(tx);
       setSummary(sum);
+      getInsight().then((data) => setInsight(data)).catch(() => {});
     } catch (err) {
       setError(err.message);
     } finally {
@@ -45,6 +47,7 @@ function App() {
     localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);
+    setInsight("");
     setTransactions([]);
     setSummary(null);
     toast.success("Logged out");
@@ -90,6 +93,34 @@ function App() {
       </header>
 
       <SummaryCards summary={summary} />
+      
+      {insight && insight.expense_pct !== undefined && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 24,
+          padding: "14px 18px", background: theme.colors.brandSoft,
+          border: `1px solid ${theme.colors.border}`, borderLeft: `3px solid ${theme.colors.brand}`,
+          borderRadius: theme.radius.md,
+        }}>
+          <span style={{ fontSize: 18 }}>✦</span>
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: 12, color: theme.colors.muted }}>Spent</div>
+              <div style={{ fontFamily: theme.font.display, fontSize: 20, fontWeight: 700, color: theme.colors.expense }}>
+                {insight.expense_pct}%
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: theme.colors.muted }}>Saved</div>
+              <div style={{ fontFamily: theme.font.display, fontSize: 20, fontWeight: 700, color: theme.colors.income }}>
+                {insight.savings_pct}%
+              </div>
+            </div>
+          </div>
+          <span style={{ fontSize: 14, color: theme.colors.ink, lineHeight: 1.5, flex: 1, minWidth: 200 }}>
+            {insight.comment}
+          </span>
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "stretch", marginBottom: 16 }}>
         <AddTransaction onAdded={loadData} />
