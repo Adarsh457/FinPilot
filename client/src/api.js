@@ -14,6 +14,53 @@ function handleUnauthorized() {
   window.location.reload();
 }
 
+export async function getDashboardStats() {
+  const res = await fetch(`${API}/dashboard-stats`, { headers: authHeaders() });
+  if (res.status === 401) return handleUnauthorized();
+  if (!res.ok) throw new Error("Failed to load stats");
+  return res.json();
+}
+
+export async function scanReceipt(file) {
+  const token = localStorage.getItem("finpilot_token");
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(`${API}/scan-receipt`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Couldn't scan the receipt");
+  return data;
+}
+
+export async function getBudgets() {
+  const res = await fetch(`${API}/budgets`, { headers: authHeaders() });
+  if (res.status === 401) return handleUnauthorized();
+  if (!res.ok) throw new Error("Failed to load budgets");
+  return res.json();
+}
+
+export async function setBudget(category, limit_amount) {
+  const res = await fetch(`${API}/budgets`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ category, limit_amount }),
+  });
+  if (!res.ok) throw new Error("Failed to save budget");
+  return res.json();
+}
+
+export async function deleteBudget(id) {
+  const res = await fetch(`${API}/budgets/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to delete budget");
+  return res.json();
+}
+
 export async function getInsight() {
   const res = await fetch(`${API}/insight`, { headers: authHeaders() });
   if (res.status === 401) return handleUnauthorized();

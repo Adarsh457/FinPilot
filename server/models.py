@@ -4,6 +4,32 @@ from typing import Optional
 from pydantic import field_validator
 from sqlmodel import SQLModel, Field
 
+class Budget(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id")
+    category: str
+    limit_amount: float
+
+
+class BudgetCreate(SQLModel):
+    category: str
+    limit_amount: float
+
+    @field_validator("limit_amount")
+    @classmethod
+    def limit_positive(cls, value):
+        if value <= 0:
+            raise ValueError("limit must be greater than 0")
+        return value
+
+    @field_validator("category")
+    @classmethod
+    def category_not_blank(cls, value):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("category cannot be empty")
+        return cleaned.lower()
+
 class TransactionType(str, Enum):
     income = "income"
     expense = "expense"
