@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
-import { getTransactions, getSummary, getMe, getInsight } from "./api";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster, ToastBar, toast } from "react-hot-toast";
 import { theme } from "./theme";
-import SummaryCards from "./components/SummaryCard";
-import AddTransaction from "./components/AddTransaction";
-import AskFinPilot from "./components/AskFinpilot";
-import TransactionList from "./components/TransactionList";
+import { getTransactions, getSummary, getMe, getInsight, getBudgets, getDashboardStats  } from "./api";
 import AuthScreen from "./components/Authscreen";
+import Layout from "./components/Layout";
+import TransactionsPage from "./components/TransactionsPage";
+import BudgetPlanner from "./components/BudegetPlanner";
+import Dashboard from "./components/Dashboard";
 
 const TOKEN_KEY = "finpilot_token";
 
@@ -14,20 +15,27 @@ function App() {
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
   const [transactions, setTransactions] = useState([]);
   const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [user, setUser] = useState(null);
+  const [budgets, setBudgets] = useState([]);
   const [insight, setInsight] = useState(null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null);
 
   async function loadData() {
     try {
-      const [me, tx, sum] = await Promise.all([getMe(), getTransactions(), getSummary()]);
+      const [me, tx, sum, buds, dstats] = await Promise.all([getMe(), getTransactions(), getSummary(), getBudgets(), getDashboardStats()]);
       setUser(me);
       setTransactions(tx);
       setSummary(sum);
+      setBudgets(buds);
+      setStats(dstats);
+      buds.forEach((b) => {
+        if (b.status === "over") toast.error(`You're over your ${b.category} budget! (${b.percentage}%)`);
+        else if (b.status === "warning") toast(`Heads up: ${b.percentage}% of your ${b.category} budget used.`, { icon: "⚠️" });
+      });
       getInsight().then((data) => setInsight(data)).catch(() => {});
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -47,13 +55,13 @@ function App() {
     localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);
-    setInsight("");
+    setInsight(null);
+    setBudgets([]);
     setTransactions([]);
     setSummary(null);
     toast.success("Logged out");
   }
 
-  // Not logged in → show the auth screen
   if (!token) {
     return (
       <>
@@ -63,76 +71,24 @@ function App() {
     );
   }
 
-  if (loading) return <p style={{ padding: 24 }}>Loading…</p>;
-  if (error)
-    return <p style={{ padding: 24, color: theme.colors.expense }}>{error}. Is the backend running on port 8000?</p>;
+  const shared = { transactions, summary, budgets, insight, stats, loadData, loading };
 
   return (
-    <div style={{ maxWidth: 940, margin: "0 auto", padding: "40px 20px 64px" }}>
+    <BrowserRouter>
       <AppToaster />
-
-      <header style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
-        <div style={logoMark}>✦</div>
-        <div style={{ flex: 1 }}>
-          <h1 style={{ margin: 0, fontFamily: theme.font.display, fontSize: 24, fontWeight: 700, color: theme.colors.ink }}>
-            FinPilot
-          </h1>
-          <p style={{ margin: "2px 0 0", fontSize: 13, color: theme.colors.muted }}>
-            Track your money. Ask the AI. Stay on course.
-          </p>
-        </div>
-        {user && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={avatarCircle}>{user.username.charAt(0).toUpperCase()}</div>
-            <span style={{ fontSize: 14, fontWeight: 600, color: theme.colors.ink }}>
-              Hello! {user.username}
-            </span>
-          </div>
-        )}
-        <button onClick={handleLogout} style={logoutButton}>Log out</button>
-      </header>
-
-      <SummaryCards summary={summary} />
-      
-      {insight && insight.expense_pct !== undefined && (
-        <div style={{
-          display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 24,
-          padding: "14px 18px", background: theme.colors.brandSoft,
-          border: `1px solid ${theme.colors.border}`, borderLeft: `3px solid ${theme.colors.brand}`,
-          borderRadius: theme.radius.md,
-        }}>
-          <span style={{ fontSize: 18 }}>✦</span>
-          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-            <div>
-              <div style={{ fontSize: 12, color: theme.colors.muted }}>Spent</div>
-              <div style={{ fontFamily: theme.font.display, fontSize: 20, fontWeight: 700, color: theme.colors.expense }}>
-                {insight.expense_pct}%
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 12, color: theme.colors.muted }}>Saved</div>
-              <div style={{ fontFamily: theme.font.display, fontSize: 20, fontWeight: 700, color: theme.colors.income }}>
-                {insight.savings_pct}%
-              </div>
-            </div>
-          </div>
-          <span style={{ fontSize: 14, color: theme.colors.ink, lineHeight: 1.5, flex: 1, minWidth: 200 }}>
-            {insight.comment}
-          </span>
-        </div>
-      )}
-
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "stretch", marginBottom: 16 }}>
-        <AddTransaction onAdded={loadData} />
-        <AskFinPilot />
-      </div>
-
-      <TransactionList transactions={transactions} onChanged={loadData} />
-    </div>
+      <Routes>
+        <Route element={<Layout user={user} onLogout={handleLogout} loadData={loadData} />}>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<Dashboard {...shared} />} />
+          <Route path="/transactions" element={<TransactionsPage {...shared} />} />
+          <Route path="/budgets" element={<BudgetPlanner {...shared} />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 
-// One themed Toaster (with close button) reused on both the auth screen and the app
 function AppToaster() {
   return (
     <Toaster
@@ -163,22 +119,5 @@ function AppToaster() {
     </Toaster>
   );
 }
-
-const logoMark = {
-  width: 40, height: 40, borderRadius: 12,
-  background: `linear-gradient(135deg, ${theme.colors.brand}, #7C6DF2)`,
-  color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, boxShadow: theme.shadow.raised,
-};
-const logoutButton = {
-  padding: "8px 14px", border: `1px solid ${theme.colors.border}`, borderRadius: theme.radius.sm,
-  background: "#fff", color: theme.colors.ink, fontSize: 13, fontWeight: 600, cursor: "pointer",
-};
-
-const avatarCircle = {
-  width: 34, height: 34, borderRadius: "50%",
-  background: `linear-gradient(135deg, ${theme.colors.brand}, #7C6DF2)`,
-  color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
-  fontSize: 15, fontWeight: 700, fontFamily: theme.font.display,
-};
 
 export default App;
