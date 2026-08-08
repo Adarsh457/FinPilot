@@ -1,17 +1,16 @@
+import { useOutletContext } from "react-router-dom";
+import PageHeader from "../components/PageHeader";
 import Budgets from "../components/Budgets";
-import { theme } from "../theme";
 
 function BudgetPlanner({ budgets, loadData }) {
+  const { openAddModal } = useOutletContext();
+
   return (
     <div>
-      <h1 style={pageTitle}>Budget Planner</h1>
-      <p style={pageSubtitle}>Set limits and track your spending</p>
+      <PageHeader title="Budget Planner" subtitle="Set limits and track your spending" onNew={openAddModal} />
       <Budgets budgets={budgets} onChanged={loadData} />
     </div>
   );
 }
-
-const pageTitle = { margin: "0 0 2px", fontFamily: theme.font.display, fontSize: 26, fontWeight: 700, color: theme.colors.ink };
-const pageSubtitle = { margin: "0 0 24px", fontSize: 14, color: theme.colors.muted };
 
 export default BudgetPlanner;

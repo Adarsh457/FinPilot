@@ -17,9 +17,9 @@ function navLinkStyle({ isActive }) {
   };
 }
 
-function Sidebar({ user, onLogout }) {
+function Sidebar({ user, onLogout, open, onNavigate  }) {
   return (
-    <aside style={sidebarStyle}>
+    <aside className={`fp-sidebar${open ? " open" : ""}`} style={sidebarStyle}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 8px", marginBottom: 32 }}>
         <div style={logoMark}>✦</div>
         <div>
@@ -33,7 +33,7 @@ function Sidebar({ user, onLogout }) {
       </div>
       <nav style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         {navItems.map((item) => (
-          <NavLink key={item.to} to={item.to} style={navLinkStyle}>
+          <NavLink key={item.to} to={item.to}  style={navLinkStyle} onClick={onNavigate}>
             <span style={{ fontSize: 16, width: 20, textAlign: "center" }}>{item.icon}</span>
             <span>{item.label}</span>
           </NavLink>

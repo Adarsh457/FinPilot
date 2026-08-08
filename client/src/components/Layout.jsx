@@ -6,22 +6,36 @@ import { theme } from "../theme";
 
 function Layout({ user, onLogout, loadData }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div style={{ minHeight: "100vh", background: theme.colors.bg }}>
-      <Sidebar user={user} onLogout={onLogout} />
+      <Sidebar
+        user={user}
+        onLogout={onLogout}
+        open={sidebarOpen}
+        onNavigate={() => setSidebarOpen(false)}
+      />
 
-      <main style={{ marginLeft: 240 }}>
-        {/* top bar with the always-available New Transaction button */}
-        <div style={topBar}>
-          <div style={{ fontSize: 13, color: theme.colors.muted }}>
-            Welcome back{user ? `, ${user.username}` : ""} 👋
-          </div>
-          <button onClick={() => setModalOpen(true)} style={newButton}>+ New Transaction</button>
-        </div>
+      {/* dark overlay behind the open sidebar on mobile */}
+      <div
+        className={`fp-overlay${sidebarOpen ? " show" : ""}`}
+        onClick={() => setSidebarOpen(false)}
+      />
 
-        <div style={{ padding: "24px 40px 64px", maxWidth: 1200 }}>
-          <Outlet />
+      <main className="fp-main" style={{ marginLeft: 240 }}>
+        {/* hamburger — only visible on mobile via CSS */}
+        <button
+          className="fp-hamburger"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open menu"
+          style={hamburgerStyle}
+        >
+          ☰
+        </button>
+
+        <div style={{ padding: "24px 20px 64px", maxWidth: 1200, margin: "0 auto" }}>
+          <Outlet context={{ openAddModal: () => setModalOpen(true) }} />
         </div>
       </main>
 
@@ -30,14 +44,11 @@ function Layout({ user, onLogout, loadData }) {
   );
 }
 
-const topBar = {
-  display: "flex", justifyContent: "space-between", alignItems: "center",
-  padding: "16px 40px", background: theme.colors.surface,
-  borderBottom: `1px solid ${theme.colors.border}`, position: "sticky", top: 0, zIndex: 100,
-};
-const newButton = {
-  padding: "10px 18px", border: "none", borderRadius: theme.radius.sm, background: theme.colors.brand,
-  color: "#fff", fontSize: 14, fontWeight: 600, fontFamily: theme.font.body, cursor: "pointer", whiteSpace: "nowrap",
+const hamburgerStyle = {
+  alignItems: "center", justifyContent: "center",
+  width: 42, height: 42, margin: "16px 0 0 16px", borderRadius: 10,
+  border: `1px solid ${theme.colors.border}`, background: theme.colors.surface,
+  fontSize: 20, cursor: "pointer", color: theme.colors.ink,
 };
 
 export default Layout;

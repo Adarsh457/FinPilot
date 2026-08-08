@@ -51,7 +51,7 @@ function Budgets({ budgets, onChanged }) {
   return (
     <div>
       {/* header row: title + add budget */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <div className="fp-budget-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <h2 style={{ margin: 0, fontFamily: theme.font.display, fontSize: 18, fontWeight: 600, color: theme.colors.ink }}>
           Budget Allocations & Limits
         </h2>
@@ -59,7 +59,7 @@ function Budgets({ budgets, onChanged }) {
       </div>
 
       {/* dark total pool banner */}
-      <div style={poolBanner}>
+      <div className="fp-pool-banner" style={poolBanner}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>
             TOTAL MONTHLY BUDGET POOL
@@ -95,7 +95,7 @@ function Budgets({ budgets, onChanged }) {
           No budgets yet. Click <b>+ New Budget</b> to set your first spending limit.
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+        <div className="fp-budget-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
           {budgets.map((b) => (
             <BudgetCard key={b.id} b={b} onDelete={() => handleDelete(b.id)} />
           ))}

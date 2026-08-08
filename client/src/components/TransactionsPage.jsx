@@ -1,3 +1,5 @@
+import { useOutletContext } from "react-router-dom";
+import PageHeader from "../components/PageHeader";
 import { useState, useMemo } from "react";
 import toast from "react-hot-toast";
 import { updateTransaction, deleteTransaction } from "../api";
@@ -8,6 +10,8 @@ function TransactionsPage({ transactions, loadData }) {
   const [typeFilter, setTypeFilter] = useState("all"); // all | income | expense
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [editingId, setEditingId] = useState(null);
+
+  const { openAddModal } = useOutletContext();
 
   // unique categories for the dropdown
   const categories = useMemo(() => {
@@ -40,15 +44,10 @@ function TransactionsPage({ transactions, loadData }) {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-        <div>
-          <h1 style={pageTitle}>Transactions</h1>
-          <p style={pageSubtitle}>{filtered.length} of {transactions.length} records</p>
-        </div>
-      </div>
+      <PageHeader title="Transactions" subtitle={`${filtered.length} of ${transactions.length} records`} onNew={openAddModal} />
 
       {/* Filter bar */}
-      <div style={filterBar}>
+      <div className="fp-filter-bar"  style={filterBar}>
         <input
           style={{ ...inputStyle, flex: 1, minWidth: 200 }}
           placeholder="Search by description or category…"
@@ -78,6 +77,7 @@ function TransactionsPage({ transactions, loadData }) {
         {filtered.length === 0 ? (
           <p style={{ color: theme.colors.muted, fontSize: 14, padding: 8 }}>No transactions match your filters.</p>
         ) : (
+          <div className="fp-table-scroll">
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>
@@ -96,10 +96,11 @@ function TransactionsPage({ transactions, loadData }) {
               )}
             </tbody>
           </table>
+          </div>
         )}
         {/* footer totals */}
         {filtered.length > 0 && (
-          <div style={footerStyle}>
+          <div className="fp-tx-footer"  style={footerStyle}>
             <span style={{ fontSize: 13, fontWeight: 600, color: theme.colors.muted }}>
               Total Filtered Records: {filtered.length}
             </span>
@@ -208,8 +209,6 @@ function EditRow({ t, onDone, loadData }) {
   );
 }
 
-const pageTitle = { margin: "0 0 2px", fontFamily: theme.font.display, fontSize: 26, fontWeight: 700, color: theme.colors.ink };
-const pageSubtitle = { margin: 0, fontSize: 14, color: theme.colors.muted };
 const filterBar = {
   display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 16, marginTop: 20,
   padding: 14, background: theme.colors.surface, border: `1px solid ${theme.colors.border}`,

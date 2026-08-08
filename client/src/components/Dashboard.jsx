@@ -1,18 +1,21 @@
+import { useOutletContext } from "react-router-dom";
+import PageHeader from "../components/PageHeader";
 import StatCard from "../components/StatCard";
 import RecentTransactions from "../components/RecentTransactions";
 import AskFinPilot from "../components/AskFinpilot";
 import { theme } from "../theme";
 
 function Dashboard({ stats, insight, transactions, loadData, loading }) {
+  const { openAddModal } = useOutletContext();
+
   return (
     <div>
-      <h1 style={pageTitle}>Dashboard</h1>
-      <p style={pageSubtitle}>Your money at a glance</p>
+      <PageHeader title="Dashboard" subtitle="Your money at a glance" onNew={openAddModal} />
 
       {loading && <p style={{ color: theme.colors.muted }}>Loading…</p>}
 
       {stats && (
-        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 20 }}>
+        <div className="fp-stat-grid">
           <StatCard label="Total Balance" value={stats.balance} icon="₹" accent={theme.colors.brand}
             sub={stats.balance >= 0 ? "You're in the green" : "Spending over income"}
             subColor={stats.balance >= 0 ? theme.colors.income : theme.colors.expense} />
@@ -23,7 +26,7 @@ function Dashboard({ stats, insight, transactions, loadData, loading }) {
       )}
 
       {insight && insight.expense_pct !== undefined && (
-        <div style={insightStyle}>
+        <div className="fp-insight" style={insightStyle}>
           <span style={{ fontSize: 18 }}>✦</span>
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
             <div>
@@ -46,8 +49,6 @@ function Dashboard({ stats, insight, transactions, loadData, loading }) {
   );
 }
 
-const pageTitle = { margin: "0 0 2px", fontFamily: theme.font.display, fontSize: 26, fontWeight: 700, color: theme.colors.ink };
-const pageSubtitle = { margin: "0 0 24px", fontSize: 14, color: theme.colors.muted };
 const insightStyle = {
   display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 20,
   padding: "14px 18px", background: theme.colors.brandSoft, border: `1px solid ${theme.colors.border}`,

@@ -27,6 +27,127 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Dashboard responsiveness */
+.fp-stat-grid {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.fp-stat-grid > * {
+  flex: 1 1 200px;
+}
+
+@media (max-width: 640px) {
+  /* stat cards: two per row on small screens */
+  .fp-stat-grid > * {
+    flex: 1 1 calc(50% - 8px);
+    min-width: 0;
+  }
+  /* insight banner stacks its parts */
+  .fp-insight {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+}
+
+@media (max-width: 400px) {
+  /* one card per row on very small phones */
+  .fp-stat-grid > * {
+    flex: 1 1 100%;
+  }
+}
+
+/* Transactions page responsiveness */
+.fp-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.fp-table-scroll table {
+  min-width: 520px; /* keeps columns readable; scrolls if narrower */
+}
+
+@media (max-width: 640px) {
+  /* filter bar: search full width, controls below */
+  .fp-filter-bar {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .fp-filter-bar > * {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  /* footer totals stack */
+  .fp-tx-footer {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+}
+
+/* Budget Planner responsiveness */
+@media (max-width: 640px) {
+  /* dark pool banner stacks its two halves */
+  .fp-pool-banner {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  .fp-pool-banner > * {
+    width: 100%;
+    max-width: 100% !important;
+  }
+  /* budget cards: one per row */
+  .fp-budget-grid {
+    grid-template-columns: 1fr !important;
+  }
+  /* the "Budget Allocations" heading + New Budget button stack */
+  .fp-budget-head {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 12px;
+  }
+  .fp-budget-head button {
+    width: 100%;
+  }
+}
+
+/* Page header + buttons on mobile */
+@media (max-width: 640px) {
+  /* PageHeader: title and New Transaction button stack */
+  .fp-page-header {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .fp-page-header button {
+    width: 100%;
+  }
+}
+
+/* Responsive sidebar */
+.fp-sidebar {
+  transition: transform 0.25s ease;
+}
+.fp-hamburger { display: none; }
+.fp-overlay { display: none; }
+
+@media (max-width: 800px) {
+  .fp-main { margin-left: 0 !important; }
+  .fp-sidebar {
+    transform: translateX(-100%);
+    z-index: 1001;
+  }
+  .fp-sidebar.open { transform: translateX(0); }
+  .fp-hamburger {
+    display: flex !important;
+  }
+  .fp-overlay.show {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,21,36,0.5);
+    z-index: 1000;
+  }
+}
+
 :focus-visible { outline: 2px solid #4F46E5; outline-offset: 2px; }
 
 @keyframes fpFadeIn {
@@ -42,3 +163,4 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
