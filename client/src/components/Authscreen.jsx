@@ -76,6 +76,12 @@ function AuthScreen({ onAuth, initialMode = "login" }) {
 
       {/* RIGHT — the form */}
       <div style={formSide}>
+        <div style={{ width: "100%", maxWidth: 380 }}>
+          {/* mobile-only logo (the big panel is hidden on phones, so this gives a way back) */}
+          <div className="fp-mobile-logo" onClick={() => navigate("/")} style={mobileLogoBar}>
+            <div style={logoMark}>✦</div>
+            <span style={{ fontFamily: theme.font.display, fontWeight: 700, fontSize: 20, color: theme.colors.ink }}>FinPilot</span>
+          </div>
         <div style={cardStyle}>
           <h1 style={{ margin: "0 0 4px", fontFamily: theme.font.display, fontSize: 24, fontWeight: 700, color: theme.colors.ink }}>
             {isLogin ? "Welcome back" : "Create your account"}
@@ -123,9 +129,13 @@ function AuthScreen({ onAuth, initialMode = "login" }) {
         </div>
       </div>
     </div>
+    </div>
   );
 }
-
+const mobileLogoBar = {
+  display: "none", alignItems: "center", justifyContent: "center", gap: 10,
+  cursor: "pointer", marginBottom: 20,
+};
 const wrapStyle = { display: "flex", minHeight: "100vh" };
 const brandPanel = {
   flex: "1 1 45%", background: theme.colors.sidebar, padding: "48px 44px",
