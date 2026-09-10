@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster, ToastBar, toast } from "react-hot-toast";
 import { theme } from "./theme";
-import { getTransactions, getSummary, getMe, getInsight, getBudgets, getDashboardStats  } from "./api";
+import { getTransactions, getSummary, getMe, getInsight, getBudgets, getDashboardStats } from "./api";
 import AuthScreen from "./components/Authscreen";
 import Layout from "./components/Layout";
+import LandingPage from "./pages/LandingPage";
+import Dashboard from "./components/Dashboard";
 import TransactionsPage from "./components/TransactionsPage";
 import BudgetPlanner from "./components/BudegetPlanner";
-import Dashboard from "./components/Dashboard";
 
 const TOKEN_KEY = "finpilot_token";
 
@@ -59,16 +60,8 @@ function App() {
     setBudgets([]);
     setTransactions([]);
     setSummary(null);
+    setStats(null);
     toast.success("Logged out");
-  }
-
-  if (!token) {
-    return (
-      <>
-        <AppToaster />
-        <AuthScreen onAuth={handleAuth} />
-      </>
-    );
   }
 
   const shared = { transactions, summary, budgets, insight, stats, loadData, loading };
@@ -77,13 +70,19 @@ function App() {
     <BrowserRouter>
       <AppToaster />
       <Routes>
-        <Route element={<Layout user={user} onLogout={handleLogout} loadData={loadData} />}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* Public routes */}
+        <Route path="/" element={token ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
+        <Route path="/login" element={token ? <Navigate to="/dashboard" replace /> : <AuthScreen initialMode="login" onAuth={handleAuth} />} />
+        <Route path="/signup" element={token ? <Navigate to="/dashboard" replace /> : <AuthScreen initialMode="register" onAuth={handleAuth} />} />
+
+        {/* Protected routes */}
+        <Route element={token ? <Layout user={user} onLogout={handleLogout} loadData={loadData} /> : <Navigate to="/login" replace />}>
           <Route path="/dashboard" element={<Dashboard {...shared} />} />
           <Route path="/transactions" element={<TransactionsPage {...shared} />} />
           <Route path="/budgets" element={<BudgetPlanner {...shared} />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

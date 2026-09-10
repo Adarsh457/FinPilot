@@ -164,3 +164,7 @@ body {
   * { animation: none !important; transition: none !important; }
 }
 
+@media (max-width: 800px) {
+  .fp-brand-panel { display: none !important; }
+}
+
